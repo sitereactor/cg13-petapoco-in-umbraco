@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+
+    <title>Umbraco ♥ PetaPoco</title>
+
+    <meta name="description" content="A framework for easily creating beautiful presentations using HTML">
+    <meta name="author" content="Hakim El Hattab">
+
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <link rel="stylesheet" href="css/reveal.min.css">
+    <link rel="stylesheet" href="css/theme/umbraco.css" id="theme">
+
+    <!-- For syntax highlighting -->
+    <link rel="stylesheet" href="lib/css/zenburn.css">
+
+    <!-- If the query includes 'print-pdf', use the PDF print sheet -->
+    <script>
+        document.write('<link rel="stylesheet" href="css/print/' + (window.location.search.match(/print-pdf/gi) ? 'pdf' : 'paper') + '.css" type="text/css" media="print">');
+    </script>
+
+    <!--[if lt IE 9]>
+		<script src="lib/js/html5shiv.js"></script>
+		<![endif]-->
+</head>
+
+<body>
+
+    <div class="reveal">
+        <!-- Any section element inside of this container is displayed as a slide -->
+        <div class="slides">
+
+            <section>
+                <img src="images/umbraco_logo_orange_rgb.svg" style="margin-bottom: 10px" alt="Umbraco" width="300px" />
+
+                <h1>Umbraco <span style="color: red">♥</span> PetaPoco</h1>
+            </section>
+            <section>
+                <section>
+                    <h1>What is PetaPoco?</h1>
+                </section>
+
+                <section>
+                    <h2>Micro ORM</h2>
+                    A very basic object relational mapper
+                </section>
+
+                <section>
+                    Umbraco.Core.Persistence.<h2>UmbracoDatabase</h2>
+                </section>
+            </section>
+
+
+            <section>
+                <section>
+                    <h1>How does this affect me?</h1>
+                </section>
+
+                <section>
+                    <h2>as a Content Editor</h2>
+                </section>
+
+                <section>
+                    <h2>as a Frontend Developer</h2>
+                </section>
+
+                <section>
+                    <h2>as a Backend Developer</h2>
+                </section>
+
+                <section>
+                    <h2>as a Package Developer</h2>
+                </section>
+            </section>
+
+            <section data-state="demo">
+                <section>
+                    <h1>How can I use it?</h1>
+                </section>
+
+                <section>
+                    <h1>ApplicationContext<br/>.Current<br/>.DatabaseContext<br/>.Database</h1>
+                </section>
+
+                <section><p><strong>PetaPoco</strong> methods Out of the box</p>
+<pre><code>
+.Execute(string sql)
+.ExecuteScalar<T>(string sql)
+.Fetch<T>(string sql)
+.Query<T>(string sql)
+.Page<T>(int page, int size, string sql)
+.SingleOrDefault()
+.Insert(object poco)
+.Update(object poco)
+.Delete(object poco)
+.Save(object poco) //← will work out if the object should be inserted or updated
+</code></pre>
+                </section>
+
+                <section>
+                    <h2>Sql statements as a string <br/>or SQL object</h2>
+                </section>
+
+                <section>
+                    <h2>Fetch versus Query</h2>
+                    <p>Fetch returns a List<> of POCO's whereas Query uses yield return to iterate over the results without loading the whole set into memory</p>
+                </section>
+
+                <section>
+                    <h2>Check http://www.toptensoftware.com/petapoco/ for more documentation on the PetaPoco bits</h2>
+                </section>
+            </section>
+
+            <section>
+                <section>
+                <h1>Added sugar</h1>
+                    <p><strong>CreateTable</strong> ← more about this later</p>
+                    <br>
+                    <p><strong>DropTable</strong></p>
+                    <br>
+                    <p><strong>TableExists</strong></p>
+                    <br>
+                    <p><strong>TruncateTable</strong></p>
+                </section>
+
+                <section>
+                    <h1>Strongly typed queries</h1>
+                </section>
+                <section data-state="demo">
+                    <p>Example - <strong>Standard PetaPoco</strong></p>
+<pre><code>
+        var sql = new Sql();
+        sql.Select("*")
+            .From("[cmsContent]")
+            .Where("[cmsContent].[nodeId] = 1045")
+            .Where("[cmsContent].[contentType] = 1050");
+</code></pre>
+                </section>
+                <section data-state="demo">
+                    <p>Example - <strong>strongly typed sql query</strong></p>
+<pre><code>
+        var sql = new Sql();
+        sql.Select("*")
+            .From<ContentDto>()
+            .Where<ContentDto>(x => x.NodeId == 1045)
+            .Where<ContentDto>(x => x.ContentTypeId == 1050);
+</code></pre>
+                </section>
+                <section data-state="demo">
+                    <p><strong>Result is the same</strong></p>
+<pre><code>
+        SELECT *
+        FROM [cmsContent]
+        WHERE ([cmsContent].[nodeId] = 1045)
+        AND ([cmsContent].[contentType] = 1050)
+</code></pre>
+                </section>
+            </section>
+
+            <section>
+                <section>
+                    <h1>Sql Syntax Provider</h1>
+                </section>
+                <section>
+                    <h2>Backing the creation of a database schema</h2>
+                </section>
+                <section>
+                    <h2>Accounts for differences in MS Sql, Sql Ce and MySql</h2>
+                </section>
+            </section>
+
+            <section>
+                <section>
+                    <h1>Creating tables <br/>and columns</h1>
+                </section>
+                <section>
+                    <h2>Use Attributes to describe your schema</h2>
+                </section>
+                <section data-state="demo"><pre><code>
+    [TableName("umbracoNode")]
+    [PrimaryKey("id")]
+    [ExplicitColumns]
+    internal class NodeDto
+    {
+        [Column("id")]
+        [PrimaryKeyColumn(Name = "PK_structure", IdentitySeed = 1045)]
+        public int NodeId { get; set; }
+
+        [Column("trashed")]
+        [Constraint(Default = "0")]
+        public bool Trashed { get; set; }
+
+        [Column("parentID")]
+        [ForeignKey(typeof(NodeDto))]
+        [IndexAttribute(IndexTypes.NonClustered, Name = "IX_umbracoNodeParentId")]
+        public int ParentId { get; set; }
+    }
+</code></pre>
+                </section>
+                <section data-state="demo"><pre><code>
+    {
+        [Column("nodeUser")]
+        [NullSetting(NullSetting = NullSettings.Null)]
+        public int? UserId { get; set; }
+
+        [Column("level")]
+        public short Level { get; set; }
+
+        [Column("path")]
+        [Length(150)]
+        public string Path { get; set; }
+
+        [Column("sortOrder")]
+        public int SortOrder { get; set; }
+
+        [Column("uniqueID")]
+        [NullSetting(NullSetting = NullSettings.Null)]
+        public Guid? UniqueId { get; set; }
+    }
+</code></pre>
+                </section>
+                <section data-state="demo"><pre><code>
+    {
+        [Column("text")]
+        [NullSetting(NullSetting = NullSettings.Null)]
+        public string Text { get; set; }
+
+        [Column("nodeObjectType")]
+        [NullSetting(NullSetting = NullSettings.Null)]
+        [IndexAttribute(IndexTypes.NonClustered, Name = "IX_umbracoNodeObjectType")]
+        public Guid? NodeObjectType { get; set; }
+
+        [Column("createDate")]
+        [Constraint(Default = "getdate()")]
+        public DateTime CreateDate { get; set; }
+    }
+</code></pre>
+                </section>
+            </section>
+
+            <section>
+                <section>
+                    <h1>Database migraitons</h1>
+                </section>
+                <section>
+                    <h2>Describe changes to <br/>a database schema</h2>
+                    <p><em>Alter Table</em></p>
+                    <p><em>Create columns</em></p>
+                    <p><em>Remove keys ....</em></p>
+                </section>
+                <section>
+                    <h2>A migrations is a...</h2>
+                    <p>single class that inherits from MigrationBase</p>
+                    <p>decorated with a Migration attribute</p>
+                    <p>two methods: Up and Down</p>
+                </section>
+                <section data-state="demo"><p>Example - Migration <strong>Attribute</strong></p><pre><code>
+        [Migration("6.0.0", 4, "Umbraco")]
+        public class NewCmsContentType2ContentTypeTable : MigrationBase
+        { .... }
+                </code></pre>
+                </section>
+                <section data-state="demo"><p>Example - <strong>Up</strong> Migration</p><pre><code>
+        public override void Up()
+        {
+            Create.Table("cmsContentType2ContentType")
+                  .WithColumn("parentContentTypeId").AsInt16().NotNullable()
+                  .WithColumn("childContentTypeId").AsInt16().NotNullable();
+
+            Create.PrimaryKey("PK_cmsContentType2ContentType")
+                  .OnTable("cmsContentType2ContentType")
+                  .Columns(new[] {"parentContentTypeId", "childContentTypeId"});
+        }
+                </code></pre>
+                </section>
+                <section data-state="demo"><p>Exmaple - <strong>Down</strong> Migration</p><pre><code>
+        public override void Down()
+        {
+            Delete.PrimaryKey("PK_cmsContentType2ContentType")
+                  .FromTable("cmsContentType2ContentType");
+
+            Delete.Table("cmsContentType2ContentType");
+        }
+                </code></pre>
+                </section>
+            </section>
+
+			<section>
+                <section>
+                    <h1>Bonus info!</h1>
+                </section>
+                <section>
+                    <h2>6.1 has retry policies</h2>
+					<em>Transient Fault Handling</em>
+                </section>
+            </section>
+			
+            <section data-state="demo">
+                <h1>Questions?</h1>
+            </section>
+
+        </div>
+
+    </div>
+
+    <script src="lib/js/head.min.js"></script>
+    <script src="js/reveal.min.js"></script>
+
+    <script>
+
+        // Full list of configuration options available here:
+        // https://github.com/hakimel/reveal.js#configuration
+        Reveal.initialize({
+            controls: true,
+            progress: false,
+            history: true,
+            center: true,
+
+            theme: Reveal.getQueryHash().theme, // available themes are in /css/theme
+            transition: Reveal.getQueryHash().transition || 'linear', // default/cube/page/concave/zoom/linear/fade/none
+
+            // Optional libraries used to extend on reveal.js
+            dependencies: [
+                { src: 'lib/js/classList.js', condition: function () { return !document.body.classList; } },
+                { src: 'plugin/markdown/showdown.js', condition: function () { return !!document.querySelector('[data-markdown]'); } },
+                { src: 'plugin/markdown/markdown.js', condition: function () { return !!document.querySelector('[data-markdown]'); } },
+                { src: 'plugin/highlight/highlight.js', async: true, callback: function () { hljs.initHighlightingOnLoad(); } },
+                { src: 'plugin/zoom-js/zoom.js', async: true, condition: function () { return !!document.body.classList; } },
+                { src: 'plugin/notes/notes.js', async: true, condition: function () { return !!document.body.classList; } }
+                // { src: 'plugin/search/search.js', async: true, condition: function() { return !!document.body.classList; } }
+                // { src: 'plugin/remotes/remotes.js', async: true, condition: function() { return !!document.body.classList; } }
+            ]
+        });
+
+    </script>
+
+</body>
+</html>
