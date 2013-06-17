@@ -1,4 +1,4 @@
-cg13-petapoco-in-umbraco
+PetaPoco in Umbraco
 ========================
 
 Presentation from CG13 about PetaPoco in Umbraco
